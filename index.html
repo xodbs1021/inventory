@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>재고 관리 시트</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+    body { background: #f5f5f5; padding: 24px 16px; }
+    .wrap { max-width: 720px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .title-txt { font-size: 15px; font-weight: 700; color: #333; }
+    .btn-export { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: #444; cursor: pointer; }
+    .btn-export:hover { background: #f5f5f5; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { padding: 9px 8px; text-align: center; font-weight: 600; font-size: 12px; color: #666; background: #f8f8f8; border: 1px solid #e8e8e8; }
+    .kakao-head { background: #FEF9C3; color: #3A1D1D; }
+    .cream-head { background: #1e1e1e; color: #fff; }
+    td { padding: 6px 8px; text-align: center; border: 1px solid #efefef; color: #222; vertical-align: middle; }
+    td:nth-child(2) { text-align: left; }
+    tr:nth-child(even) td { background: #fafafa; }
+    tr:nth-child(odd) td { background: #fff; }
+    .col-no  { width: 36px; }
+    .col-name { width: 90px; }
+    .col-count { width: 60px; }
+    .col-ctrl { width: 130px; }
+    .col-del { width: 32px; }
+    .count-val { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .count-val.zero { color: #bbb; }
+    .name-val { font-weight: 600; }
+    .no-val { font-size: 11px; color: #aaa; }
+
+    /* +/- 컨트롤 */
+    .ctrl-group { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+    .ctrl-label { font-size: 10px; font-weight: 700; letter-spacing: 0.3px; }
+    .ctrl-label.kakao-label { color: #3A1D1D; }
+    .ctrl-label.cream-label { color: #fff; background: #1a1a1a; border-radius: 4px; padding: 1px 5px; }
+    .ctrl-btns { display: flex; align-items: center; gap: 0; }
+    .btn-minus, .btn-plus {
+      width: 26px; height: 26px;
+      border: none; border-radius: 6px;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer; line-height: 1;
+      transition: opacity 0.12s, transform 0.1s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn-minus:active, .btn-plus:active { transform: scale(0.9); }
+    .btn-minus:disabled, .btn-plus:disabled { opacity: 0.25; cursor: not-allowed; transform: none; }
+    .btn-kakao-minus { background: #FEE500; color: #3A1D1D; }
+    .btn-kakao-minus:hover:not(:disabled) { opacity: 0.75; }
+    .btn-kakao-plus  { background: #FEE500; color: #3A1D1D; }
+    .btn-kakao-plus:hover:not(:disabled)  { opacity: 0.75; }
+    .btn-cream-minus { background: #1a1a1a; color: #fff; }
+    .btn-cream-minus:hover:not(:disabled) { opacity: 0.75; }
+    .btn-cream-plus  { background: #1a1a1a; color: #fff; }
+    .btn-cream-plus:hover:not(:disabled)  { opacity: 0.75; }
+    .ctrl-val { min-width: 28px; text-align: center; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .ctrl-val.zero { color: #bbb; }
+
+    .btn-del { background: none; border: none; cursor: pointer; color: #bbb; font-size: 14px; padding: 2px 5px; border-radius: 4px; }
+    .btn-del:hover { color: #e53935; }
+    .total-row td { background: #f0f0f0 !important; font-weight: 700; }
+    .total-kakao { color: #3A1D1D; background: #FEF3A0 !important; }
+    .total-cream { color: #fff; background: #222 !important; }
+    .add-row td { background: #fff !important; }
+    .btn-add { background: #fff; border: 1px dashed #ccc; border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: #888; cursor: pointer; }
+    .btn-add:hover { background: #f5f5f5; color: #444; }
+    .input-name  { border: 1px solid #ddd; border-radius: 7px; padding: 5px 8px; font-size: 13px; width: 80px; outline: none; }
+    .input-name:focus { border-color: #aaa; }
+    .input-count { border: 1px solid #ddd; border-radius: 7px; padding: 5px 6px; font-size: 13px; width: 52px; text-align: center; outline: none; }
+    .input-count:focus { border-color: #aaa; }
+    .btn-confirm { background: #fff; border: 1px solid #ccc; border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .btn-confirm:hover { background: #f5f5f5; }
+    .add-inner { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 6px 8px; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; border-radius: 20px; padding: 8px 18px; font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999; white-space: nowrap; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="toolbar">
+    <span class="title-txt">📦 재고 관리 시트</span>
+    <button class="btn-export" onclick="exportCSV()">⬇ CSV 다운로드</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th class="col-no">No.</th>
+        <th class="col-name">이름</th>
+        <th class="col-count kakao-head">카카오</th>
+        <th class="col-count cream-head">크림</th>
+        <th class="col-ctrl kakao-head">카카오 조절</th>
+        <th class="col-ctrl cream-head">크림 조절</th>
+        <th class="col-del"></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div id="toast" class="toast"></div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'inventory_rows';
+
+  function loadRows() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : defaultRows();
+    } catch(e) { return defaultRows(); }
+  }
+
+  function defaultRows() {
+    return [
+      { id:1, name:'홍길동', kakao:10, cream:8 },
+      { id:2, name:'김민준', kakao:6,  cream:4 },
+      { id:3, name:'이서연', kakao:12, cream:10 },
+      { id:4, name:'박지우', kakao:8,  cream:6 },
+      { id:5, name:'최예린', kakao:14, cream:12 },
+      { id:6, name:'정도윤', kakao:4,  cream:2 },
+    ];
+  }
+
+  function saveRows() { localStorage.setItem(STORAGE_KEY, JSON.stringify(rows)); }
+
+  let rows = loadRows();
+  let nextId = Math.max(...rows.map(r => r.id)) + 1;
+  let adding = false;
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  function render() {
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = '';
+
+    rows.forEach((r, i) => {
+      const kz = r.kakao <= 0, cz = r.cream <= 0;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="no-val">${i + 1}</span></td>
+        <td><span class="name-val">${r.name}</span></td>
+        <td><span class="count-val${kz ? ' zero' : ''}">${r.kakao}</span></td>
+        <td><span class="count-val${cz ? ' zero' : ''}">${r.cream}</span></td>
+        <td>
+          <div class="ctrl-btns">
+            <button class="btn-minus btn-kakao-minus" ${kz ? 'disabled' : ''} onclick="adj(${r.id},'kakao',-1)">−</button>
+            <span class="ctrl-val${kz ? ' zero' : ''}">${r.kakao}</span>
+            <button class="btn-plus btn-kakao-plus" onclick="adj(${r.id},'kakao',+1)">＋</button>
+          </div>
+        </td>
+        <td>
+          <div class="ctrl-btns">
+            <button class="btn-minus btn-cream-minus" ${cz ? 'disabled' : ''} onclick="adj(${r.id},'cream',-1)">−</button>
+            <span class="ctrl-val${cz ? ' zero' : ''}">${r.cream}</span>
+            <button class="btn-plus btn-cream-plus" onclick="adj(${r.id},'cream',+1)">＋</button>
+          </div>
+        </td>
+        <td><button class="btn-del" onclick="delRow(${r.id})" title="삭제">✕</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    const totalK = rows.reduce((s, r) => s + r.kakao, 0);
+    const totalC = rows.reduce((s, r) => s + r.cream, 0);
+    const tot = document.createElement('tr');
+    tot.className = 'total-row';
+    tot.innerHTML = `
+      <td></td>
+      <td style="text-align:left;font-size:11px;color:#999">합계</td>
+      <td class="total-kakao"><span class="count-val">${totalK}</span></td>
+      <td class="total-cream"><span class="count-val">${totalC}</span></td>
+      <td class="total-kakao"></td>
+      <td class="total-cream"></td>
+      <td></td>
+    `;
+    tbody.appendChild(tot);
+
+    const addTr = document.createElement('tr');
+    addTr.className = 'add-row';
+    if (!adding) {
+      addTr.innerHTML = `<td colspan="7" style="text-align:left;padding:8px 10px">
+        <button class="btn-add" onclick="startAdd()">＋ 사람 추가</button>
+      </td>`;
+    } else {
+      addTr.innerHTML = `
+        <td style="font-size:11px;color:#aaa">${rows.length + 1}</td>
+        <td><input class="input-name" id="new-name" placeholder="이름" /></td>
+        <td><input class="input-count" id="new-kakao" type="number" min="0" placeholder="0" /></td>
+        <td><input class="input-count" id="new-cream" type="number" min="0" placeholder="0" /></td>
+        <td colspan="2">
+          <div style="display:flex;gap:6px;justify-content:center">
+            <button class="btn-confirm" onclick="confirmAdd()">추가</button>
+            <button class="btn-del" onclick="cancelAdd()" style="border:1px solid #ddd">취소</button>
+          </div>
+        </td>
+        <td></td>
+      `;
+      setTimeout(() => { const el = document.getElementById('new-name'); if(el) el.focus(); }, 30);
+    }
+    tbody.appendChild(addTr);
+  }
+
+  function adj(id, platform, delta) {
+    const r = rows.find(x => x.id === id);
+    if (!r) return;
+    if (delta < 0 && r[platform] <= 0) return;
+    r[platform] = Math.max(0, r[platform] + delta);
+    saveRows();
+    const label = platform === 'kakao' ? '카카오' : '크림';
+    const sign = delta > 0 ? '+1' : '-1';
+    showToast(`${r.name} · ${label} ${sign} → ${r[platform]}장`);
+    render();
+  }
+
+  function delRow(id) {
+    const r = rows.find(x => x.id === id);
+    if (!confirm(`"${r?.name}" 을(를) 삭제할까요?`)) return;
+    rows = rows.filter(x => x.id !== id);
+    saveRows();
+    render();
+  }
+
+  function startAdd() { adding = true; render(); }
+  function cancelAdd() { adding = false; render(); }
+
+  function confirmAdd() {
+    const name = (document.getElementById('new-name').value || '').trim();
+    if (!name) { document.getElementById('new-name').focus(); return; }
+    const kakao = parseInt(document.getElementById('new-kakao').value) || 0;
+    const cream  = parseInt(document.getElementById('new-cream').value)  || 0;
+    rows.push({ id: nextId++, name, kakao, cream });
+    adding = false;
+    saveRows();
+    showToast(`✅ ${name} 추가 완료!`);
+    render();
+  }
+
+  function exportCSV() {
+    const bom = '\uFEFF';
+    let csv = bom + 'No.,이름,카카오,크림\n';
+    rows.forEach((r, i) => { csv += `${i+1},${r.name},${r.kakao},${r.cream}\n`; });
+    const totalK = rows.reduce((s,r)=>s+r.kakao,0);
+    const totalC = rows.reduce((s,r)=>s+r.cream,0);
+    csv += `,합계,${totalK},${totalC}\n`;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = '재고관리.csv'; a.click();
+    URL.revokeObjectURL(url);
+    showToast('📥 재고관리.csv 저장됨!');
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && adding) confirmAdd();
+    if (e.key === 'Escape' && adding) cancelAdd();
+  });
+
+  render();
+</script>
+</body>
+</html>
