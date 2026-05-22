@@ -125,23 +125,29 @@
     .del-modal-confirm { flex: 1; background: #e53935; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 700; color: #fff; cursor: pointer; }
 
     /* ── 로그 ── */
-    .log-card { background: #fff; border-radius: 12px; padding: 16px 18px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
-    .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .log-title { font-size: 13px; font-weight: 700; color: #333; }
-    .log-clear { background: none; border: 1px solid #eee; border-radius: 6px; padding: 3px 8px; font-size: 11px; color: #aaa; cursor: pointer; }
+    .log-card { background: #fff; border-radius: 12px; padding: 18px 18px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+    .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .log-title { font-size: 14px; font-weight: 700; color: #333; }
+    .log-clear { background: none; border: 1px solid #eee; border-radius: 6px; padding: 4px 10px; font-size: 12px; color: #aaa; cursor: pointer; }
     .log-clear:hover { color: #e53935; border-color: #e53935; }
-    .log-empty { text-align: center; color: #ccc; font-size: 12px; padding: 16px 0; }
-    .log-list { max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-    .log-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 7px; background: #f9f9f9; font-size: 12px; }
+    .log-empty { text-align: center; color: #ccc; font-size: 13px; padding: 30px 0; }
+    .log-list { max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+    .log-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; background: #f9f9f9; font-size: 13px; }
+    .log-item.log-create { background: #F0FFF4; }
+    .log-item.log-delete { background: #FFF5F5; }
     .log-time { color: #aaa; font-size: 11px; white-space: nowrap; font-variant-numeric: tabular-nums; flex-shrink: 0; }
     .log-name { font-weight: 700; color: #333; }
-    .log-plat { padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+    .log-plat { padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
     .log-plat.kk { background: #FEE500; color: #3A1D1D; }
     .log-plat.cr { background: #1a1a1a; color: #fff; }
-    .log-action { margin-left: auto; font-weight: 700; white-space: nowrap; }
-    .log-action.plus  { color: #4CAF50; }
-    .log-action.minus { color: #e53935; }
-    .log-val { color: #666; font-variant-numeric: tabular-nums; }
+    .log-plat.create { background: #4CAF50; color: #fff; }
+    .log-plat.delete { background: #e53935; color: #fff; }
+    .log-action { margin-left: auto; font-weight: 700; white-space: nowrap; font-size: 13px; }
+    .log-action.plus   { color: #4CAF50; }
+    .log-action.minus  { color: #e53935; }
+    .log-action.create { color: #4CAF50; }
+    .log-action.delete { color: #e53935; }
+    .log-val { color: #888; font-variant-numeric: tabular-nums; font-size: 12px; }
 
     /* ── 토스트 ── */
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; border-radius: 20px; padding: 9px 20px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 999; white-space: nowrap; }
@@ -268,8 +274,8 @@
     return `${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
 
-  function addLog(name, platform, delta, newVal) {
-    logs.unshift({ time: nowStr(), name, platform, delta, newVal });
+  function addLog(entry) {
+    logs.unshift({ time: nowStr(), ...entry });
     if (logs.length > 100) logs.pop();
     renderLog();
   }
@@ -285,18 +291,38 @@
     ul.className = 'log-list';
     logs.forEach(l => {
       const item = document.createElement('div');
-      item.className = 'log-item';
-      const platClass = l.platform === 'kakao' ? 'kk' : 'cr';
-      const platLabel = l.platform === 'kakao' ? '카카오' : '크림';
-      const sign = l.delta > 0 ? '+1' : '-1';
-      const actionClass = l.delta > 0 ? 'plus' : 'minus';
-      item.innerHTML = `
-        <span class="log-time">${l.time}</span>
-        <span class="log-name">${l.name}</span>
-        <span class="log-plat ${platClass}">${platLabel}</span>
-        <span class="log-action ${actionClass}">${sign}</span>
-        <span class="log-val">→ ${l.newVal}장</span>
-      `;
+      if (l.type === 'create') {
+        item.className = 'log-item log-create';
+        item.innerHTML = `
+          <span class="log-time">${l.time}</span>
+          <span class="log-plat create">생성</span>
+          <span class="log-name">${l.name}</span>
+          <span class="log-action create" style="margin-left:auto">추가됨</span>
+          <span class="log-val">카카오 ${l.kakao}장 · 크림 ${l.cream}장</span>
+        `;
+      } else if (l.type === 'delete') {
+        item.className = 'log-item log-delete';
+        item.innerHTML = `
+          <span class="log-time">${l.time}</span>
+          <span class="log-plat delete">삭제</span>
+          <span class="log-name">${l.name}</span>
+          <span class="log-action delete" style="margin-left:auto">삭제됨</span>
+          <span class="log-val">카카오 ${l.kakao}장 · 크림 ${l.cream}장</span>
+        `;
+      } else {
+        item.className = 'log-item';
+        const platClass = l.platform === 'kakao' ? 'kk' : 'cr';
+        const platLabel = l.platform === 'kakao' ? '카카오' : '크림';
+        const sign = l.delta > 0 ? '+1' : '-1';
+        const actionClass = l.delta > 0 ? 'plus' : 'minus';
+        item.innerHTML = `
+          <span class="log-time">${l.time}</span>
+          <span class="log-name">${l.name}</span>
+          <span class="log-plat ${platClass}">${platLabel}</span>
+          <span class="log-action ${actionClass}" style="margin-left:auto">${sign}</span>
+          <span class="log-val">→ ${l.newVal}장</span>
+        `;
+      }
       ul.appendChild(item);
     });
     el.appendChild(ul);
@@ -442,7 +468,7 @@
     const newVal = Math.max(0, r[platform] + delta);
     update(ref(db,'rows/'+fbKey), { [platform]: newVal });
     const label = platform==='kakao'?'카카오':'크림';
-    addLog(r.name, platform, delta, newVal);
+    addLog({ type: 'adj', name: r.name, platform, delta, newVal });
     toast(`${r.name} · ${label} ${delta>0?'+1':'-1'} → ${newVal}장`);
   };
 
@@ -457,6 +483,8 @@
   };
   window.confirmDelete = () => {
     if (!pendingDeleteKey) return;
+    const r = rows.find(x => x.fbKey === pendingDeleteKey);
+    if (r) addLog({ type: 'delete', name: r.name, kakao: r.kakao, cream: r.cream });
     remove(ref(db,'rows/'+pendingDeleteKey));
     closeDelModal();
     toast('삭제되었습니다.');
@@ -478,6 +506,7 @@
     const kakao = parseInt(document.getElementById('add-kakao').value)||0;
     const cream  = parseInt(document.getElementById('add-cream').value)||0;
     push(rowsRef, { name, kakao, cream, order: rows.length });
+    addLog({ type: 'create', name, kakao, cream });
     closeAddModal();
     toast(`✅ ${name} 추가 완료!`);
   };
