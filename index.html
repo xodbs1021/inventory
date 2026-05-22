@@ -250,10 +250,24 @@
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
   const rowsRef = ref(db, 'rows');
+  const logsRef = ref(db, 'logs');
 
   let rows = [];
   let pendingDeleteKey = null;
   let logs = [];
+
+  // 로그 Firebase 실시간 수신
+  onValue(logsRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      logs = Object.entries(data)
+        .map(([k, v]) => ({ fbKey: k, ...v }))
+        .sort((a, b) => b.ts - a.ts);
+    } else {
+      logs = [];
+    }
+    renderLog();
+  });
 
   function toast(msg) {
     const t = document.getElementById('toast');
@@ -275,9 +289,7 @@
   }
 
   function addLog(entry) {
-    logs.unshift({ time: nowStr(), ...entry });
-    if (logs.length > 100) logs.pop();
-    renderLog();
+    push(logsRef, { ...entry, ts: Date.now(), time: nowStr() });
   }
 
   function renderLog() {
@@ -511,7 +523,7 @@
     toast(`✅ ${name} 추가 완료!`);
   };
 
-  window.clearLog = () => { logs = []; renderLog(); };
+  window.clearLog = () => { remove(logsRef); };
 
   document.addEventListener('keydown', e => {
     if (e.key==='Escape') { closeDelModal(); closeAddModal(); }
