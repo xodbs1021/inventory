@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -8,7 +7,9 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
     body { background: #f5f5f5; padding: 20px 14px; }
-    .wrap { max-width: 720px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .wrap { max-width: 720px; margin: 0 auto; }
+
+    .card { background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 12px; }
     .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
     .title-txt { font-size: 15px; font-weight: 700; color: #333; }
     .status { font-size: 11px; color: #aaa; }
@@ -16,7 +17,12 @@
     .status.error { color: #e53935; }
     .loading { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
 
-    /* ── 데스크탑 테이블 ── */
+    /* ── 테이블 (데스크탑) ── */
+    #table-wrap { display: none; }
+    @media (min-width: 601px) {
+      #table-wrap { display: block; }
+      #card-list  { display: none !important; }
+    }
     table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
     th { padding: 9px 8px; text-align: center; font-weight: 600; font-size: 12px; color: #666; background: #f8f8f8; border: 1px solid #e8e8e8; }
     .th-kakao { background: #FEF9C3; color: #3A1D1D; }
@@ -30,94 +36,112 @@
     .total-row td { background: #f0f0f0 !important; font-weight: 700; }
     .add-row td { background: #fff !important; }
 
-    /* ── +/- 버튼 ── */
+    /* ── +/- 버튼 (공통) ── */
     .ctrl { display: flex; align-items: center; justify-content: center; gap: 14px; }
-    .btn-m, .btn-p { width: 30px; height: 30px; border: none; border-radius: 8px; font-size: 18px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity .12s, transform .1s; flex-shrink: 0; line-height: 1; }
+    .btn-m, .btn-p { width: 30px; height: 30px; border: none; border-radius: 8px; font-size: 18px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity .12s, transform .1s; flex-shrink: 0; }
     .btn-m:active, .btn-p:active { transform: scale(0.88); }
     .btn-m:disabled { opacity: .25; cursor: not-allowed; transform: none; }
     .bk { background: #FEE500; color: #3A1D1D; }
     .bk:hover:not(:disabled) { opacity: .75; }
     .bc { background: #1a1a1a; color: #fff; }
     .bc:hover:not(:disabled) { opacity: .75; }
-
     .btn-del-row { background: none; border: none; cursor: pointer; color: #ccc; font-size: 15px; padding: 3px 5px; border-radius: 4px; }
     .btn-del-row:hover { color: #e53935; }
-
-    .btn-add { background: #fff; border: 1px dashed #ccc; border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: #888; cursor: pointer; }
-    .btn-add:hover { background: #f5f5f5; }
+    .btn-add-tbl { background: #fff; border: 1px dashed #ccc; border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: #888; cursor: pointer; }
+    .btn-add-tbl:hover { background: #f5f5f5; }
     .input-name  { border: 1px solid #ddd; border-radius: 7px; padding: 5px 8px; font-size: 13px; width: 80px; outline: none; }
     .input-count { border: 1px solid #ddd; border-radius: 7px; padding: 5px 6px; font-size: 13px; width: 52px; text-align: center; outline: none; }
-    .btn-ok  { background: #fff; border: 1px solid #ccc; border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
-    .btn-ok:hover { background: #f5f5f5; }
-    .btn-cancel { background: none; border: 1px solid #eee; border-radius: 7px; padding: 5px 10px; font-size: 12px; color: #aaa; cursor: pointer; }
+    .btn-ok-sm  { background: #fff; border: 1px solid #ccc; border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .btn-cancel-sm { background: none; border: 1px solid #eee; border-radius: 7px; padding: 5px 10px; font-size: 12px; color: #aaa; cursor: pointer; }
 
-    /* ── 모바일 카드 레이아웃 ── */
-    .card-list { display: none; }
-    .card { background: #fff; border: 1px solid #efefef; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
-    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .card-name { font-size: 14px; font-weight: 700; color: #222; }
-    .card-no { font-size: 11px; color: #bbb; margin-right: 6px; }
-    .card-body { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .card-platform { border-radius: 8px; padding: 8px 10px; }
-    .card-platform.kakao { background: #FFFDE7; }
-    .card-platform.cream { background: #1a1a1a; }
-    .card-plabel { font-size: 10px; font-weight: 700; margin-bottom: 6px; }
-    .card-platform.kakao .card-plabel { color: #3A1D1D; }
-    .card-platform.cream .card-plabel { color: #aaa; }
-    .card-count { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; margin-bottom: 8px; }
-    .card-platform.kakao .card-count { color: #3A1D1D; }
-    .card-platform.cream .card-count { color: #fff; }
-    .card-platform.kakao .card-count.zero { color: #bbb; }
-    .card-platform.cream .card-count.zero { color: #555; }
-    .card-ctrl { display: flex; gap: 16px; align-items: center; }
-    .card-btn-m, .card-btn-p { width: 34px; height: 34px; border: none; border-radius: 8px; font-size: 20px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity .12s, transform .1s; }
-    .card-btn-m:active, .card-btn-p:active { transform: scale(0.88); }
-    .card-btn-m:disabled { opacity: .25; cursor: not-allowed; }
-    .card-platform.kakao .card-btn-m,
-    .card-platform.kakao .card-btn-p { background: #FEE500; color: #3A1D1D; }
-    .card-platform.cream .card-btn-m,
-    .card-platform.cream .card-btn-p { background: #333; color: #fff; }
-    .card-platform.kakao .card-btn-m:hover:not(:disabled),
-    .card-platform.kakao .card-btn-p:hover:not(:disabled) { opacity: .75; }
-    .card-platform.cream .card-btn-m:hover:not(:disabled),
-    .card-platform.cream .card-btn-p:hover:not(:disabled) { opacity: .75; }
+    /* ── 모바일 카드 ── */
+    #card-list { display: none; }
+    @media (max-width: 600px) { #card-list { display: block; } }
+    .person-card { background: #fff; border: 1px solid #efefef; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+    .person-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .person-name { font-size: 14px; font-weight: 700; color: #222; }
+    .person-no { font-size: 11px; color: #bbb; margin-right: 5px; }
+    .person-body { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .plat-box { border-radius: 8px; padding: 10px; }
+    .plat-box.kk { background: #FFFDE7; }
+    .plat-box.cr { background: #1a1a1a; }
+    .plat-label { font-size: 10px; font-weight: 700; margin-bottom: 4px; }
+    .plat-box.kk .plat-label { color: #3A1D1D; }
+    .plat-box.cr .plat-label { color: #aaa; }
+    .plat-count { font-size: 20px; font-weight: 700; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+    .plat-box.kk .plat-count { color: #3A1D1D; }
+    .plat-box.cr .plat-count { color: #fff; }
+    .plat-box.kk .plat-count.zero { color: #ccc; }
+    .plat-box.cr .plat-count.zero { color: #555; }
+    .plat-ctrl { display: flex; gap: 16px; }
+    .mb-m, .mb-p { width: 36px; height: 36px; border: none; border-radius: 8px; font-size: 20px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity .12s, transform .1s; }
+    .mb-m:active, .mb-p:active { transform: scale(0.88); }
+    .mb-m:disabled { opacity: .25; cursor: not-allowed; }
+    .plat-box.kk .mb-m, .plat-box.kk .mb-p { background: #FEE500; color: #3A1D1D; }
+    .plat-box.cr .mb-m, .plat-box.cr .mb-p { background: #333; color: #fff; }
+    .plat-box.kk .mb-m:hover:not(:disabled), .plat-box.kk .mb-p:hover:not(:disabled) { opacity: .75; }
+    .plat-box.cr .mb-m:hover:not(:disabled), .plat-box.cr .mb-p:hover:not(:disabled) { opacity: .75; }
 
-    .card-total { background: #f8f8f8; border-radius: 10px; padding: 10px 14px; display: flex; gap: 12px; margin-bottom: 8px; }
-    .card-total-item { flex: 1; text-align: center; border-radius: 7px; padding: 6px; }
-    .card-total-item.kakao { background: #FEF3A0; }
-    .card-total-item.cream { background: #222; }
-    .card-total-label { font-size: 10px; font-weight: 700; margin-bottom: 2px; }
-    .card-total-item.kakao .card-total-label { color: #3A1D1D; }
-    .card-total-item.cream .card-total-label { color: #aaa; }
-    .card-total-val { font-size: 16px; font-weight: 700; }
-    .card-total-item.kakao .card-total-val { color: #3A1D1D; }
-    .card-total-item.cream .card-total-val { color: #fff; }
+    .total-bar { display: flex; gap: 8px; margin-bottom: 8px; }
+    .total-chip { flex: 1; border-radius: 8px; padding: 8px 10px; text-align: center; }
+    .total-chip.kk { background: #FEF3A0; }
+    .total-chip.cr { background: #222; }
+    .total-chip-label { font-size: 10px; font-weight: 700; }
+    .total-chip.kk .total-chip-label { color: #3A1D1D; }
+    .total-chip.cr .total-chip-label { color: #aaa; }
+    .total-chip-val { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .total-chip.kk .total-chip-val { color: #3A1D1D; }
+    .total-chip.cr .total-chip-val { color: #fff; }
 
-    .btn-add-card { width: 100%; background: #fff; border: 1px dashed #ccc; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 600; color: #888; cursor: pointer; }
+    .btn-add-card { width: 100%; background: #fff; border: 1px dashed #ccc; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 600; color: #888; cursor: pointer; margin-top: 4px; }
     .btn-add-card:hover { background: #f5f5f5; }
 
-    .card-add-form { background: #f9f9f9; border: 1px solid #eee; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
-    .card-add-form label { font-size: 11px; color: #999; display: block; margin-bottom: 3px; }
-    .card-add-form .inp-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-    .card-add-form input { border: 1px solid #ddd; border-radius: 7px; padding: 7px 8px; font-size: 13px; width: 100%; outline: none; }
-    .card-add-form .btn-row { display: flex; gap: 8px; }
-    .card-add-form .btn-ok  { flex: 1; background: #222; color: #fff; border: none; border-radius: 7px; padding: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-    .card-add-form .btn-cancel { flex: 1; background: #fff; border: 1px solid #ddd; border-radius: 7px; padding: 8px; font-size: 13px; color: #888; cursor: pointer; }
-
-    @media (max-width: 600px) {
-      table, .add-row-desktop { display: none !important; }
-      .card-list { display: block; }
+    /* ── 추가 모달 (공통) ── */
+    .add-modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 900; align-items: flex-end; justify-content: center; }
+    .add-modal-bg.show { display: flex; }
+    @media (min-width: 601px) {
+      .add-modal-bg { align-items: center; }
     }
+    .add-modal { background: #fff; border-radius: 16px 16px 0 0; padding: 22px 20px 32px; width: 100%; max-width: 400px; }
+    @media (min-width: 601px) {
+      .add-modal { border-radius: 14px; padding: 24px 24px; }
+    }
+    .add-modal h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: #222; }
+    .add-modal label { font-size: 11px; color: #999; display: block; margin-bottom: 4px; }
+    .add-modal input { width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 9px 10px; font-size: 14px; outline: none; margin-bottom: 12px; }
+    .add-modal input:focus { border-color: #888; }
+    .add-modal-btns { display: flex; gap: 8px; margin-top: 4px; }
+    .add-modal-btns .btn-submit { flex: 1; background: #222; color: #fff; border: none; border-radius: 8px; padding: 11px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .add-modal-btns .btn-dismiss { flex: 1; background: #f5f5f5; color: #666; border: none; border-radius: 8px; padding: 11px; font-size: 14px; font-weight: 600; cursor: pointer; }
 
-    /* ── 삭제 확인 모달 ── */
-    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; }
-    .modal-bg.show { display: flex; }
-    .modal { background: #fff; border-radius: 14px; padding: 24px 20px; width: 280px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
-    .modal-title { font-size: 15px; font-weight: 700; color: #222; margin-bottom: 8px; }
-    .modal-desc  { font-size: 13px; color: #888; margin-bottom: 20px; line-height: 1.5; }
-    .modal-btns  { display: flex; gap: 8px; }
-    .modal-cancel { flex: 1; background: #f5f5f5; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 600; color: #666; cursor: pointer; }
-    .modal-confirm { flex: 1; background: #e53935; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 700; color: #fff; cursor: pointer; }
+    /* ── 삭제 모달 ── */
+    .del-modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; }
+    .del-modal-bg.show { display: flex; }
+    .del-modal { background: #fff; border-radius: 14px; padding: 24px 20px; width: 280px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
+    .del-modal-title { font-size: 15px; font-weight: 700; color: #222; margin-bottom: 8px; }
+    .del-modal-desc  { font-size: 13px; color: #888; margin-bottom: 20px; line-height: 1.5; }
+    .del-modal-btns  { display: flex; gap: 8px; }
+    .del-modal-cancel  { flex: 1; background: #f5f5f5; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 600; color: #666; cursor: pointer; }
+    .del-modal-confirm { flex: 1; background: #e53935; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 700; color: #fff; cursor: pointer; }
+
+    /* ── 로그 ── */
+    .log-card { background: #fff; border-radius: 12px; padding: 16px 18px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+    .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .log-title { font-size: 13px; font-weight: 700; color: #333; }
+    .log-clear { background: none; border: 1px solid #eee; border-radius: 6px; padding: 3px 8px; font-size: 11px; color: #aaa; cursor: pointer; }
+    .log-clear:hover { color: #e53935; border-color: #e53935; }
+    .log-empty { text-align: center; color: #ccc; font-size: 12px; padding: 16px 0; }
+    .log-list { max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+    .log-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 7px; background: #f9f9f9; font-size: 12px; }
+    .log-time { color: #aaa; font-size: 11px; white-space: nowrap; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+    .log-name { font-weight: 700; color: #333; }
+    .log-plat { padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+    .log-plat.kk { background: #FEE500; color: #3A1D1D; }
+    .log-plat.cr { background: #1a1a1a; color: #fff; }
+    .log-action { margin-left: auto; font-weight: 700; white-space: nowrap; }
+    .log-action.plus  { color: #4CAF50; }
+    .log-action.minus { color: #e53935; }
+    .log-val { color: #666; font-variant-numeric: tabular-nums; }
 
     /* ── 토스트 ── */
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; border-radius: 20px; padding: 9px 20px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 999; white-space: nowrap; }
@@ -126,14 +150,31 @@
 </head>
 <body>
 
+<!-- 추가 모달 -->
+<div class="add-modal-bg" id="add-modal">
+  <div class="add-modal">
+    <h3>＋ 사람 추가</h3>
+    <label>이름</label>
+    <input id="add-name" placeholder="이름 입력" />
+    <label>카카오 수량</label>
+    <input id="add-kakao" type="number" min="0" placeholder="0" />
+    <label>크림 수량</label>
+    <input id="add-cream" type="number" min="0" placeholder="0" />
+    <div class="add-modal-btns">
+      <button class="btn-dismiss" onclick="closeAddModal()">취소</button>
+      <button class="btn-submit" onclick="confirmAdd()">추가</button>
+    </div>
+  </div>
+</div>
+
 <!-- 삭제 확인 모달 -->
-<div class="modal-bg" id="modal">
-  <div class="modal">
-    <div class="modal-title">정말 삭제하시겠습니까?</div>
-    <div class="modal-desc" id="modal-desc"></div>
-    <div class="modal-btns">
-      <button class="modal-cancel"  onclick="closeModal()">취소</button>
-      <button class="modal-confirm" onclick="confirmDelete()">삭제</button>
+<div class="del-modal-bg" id="del-modal">
+  <div class="del-modal">
+    <div class="del-modal-title">정말 삭제하시겠습니까?</div>
+    <div class="del-modal-desc" id="del-modal-desc"></div>
+    <div class="del-modal-btns">
+      <button class="del-modal-cancel"  onclick="closeDelModal()">취소</button>
+      <button class="del-modal-confirm" onclick="confirmDelete()">삭제</button>
     </div>
   </div>
 </div>
@@ -141,39 +182,53 @@
 <div class="toast" id="toast"></div>
 
 <div class="wrap">
-  <div class="toolbar">
-    <span class="title-txt">📦 재고 관리 시트</span>
-    <span class="status" id="status">연결 중...</span>
+  <!-- 메인 카드 -->
+  <div class="card">
+    <div class="toolbar">
+      <span class="title-txt">📦 재고 관리 시트</span>
+      <span class="status" id="status">연결 중...</span>
+    </div>
+    <div id="loading" class="loading">데이터 불러오는 중...</div>
+
+    <!-- 데스크탑 테이블 -->
+    <div id="table-wrap">
+      <table>
+        <colgroup>
+          <col style="width:36px"><col style="width:90px">
+          <col style="width:58px"><col style="width:58px">
+          <col style="width:110px"><col style="width:110px">
+          <col style="width:32px">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>No.</th><th>이름</th>
+            <th class="th-kakao">카카오</th>
+            <th class="th-cream">크림</th>
+            <th class="th-kakao">카카오 조절</th>
+            <th class="th-cream">크림 조절</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- 모바일 카드 -->
+    <div id="card-list"></div>
   </div>
-  <div id="loading" class="loading">데이터 불러오는 중...</div>
 
-  <!-- 데스크탑 테이블 -->
-  <table id="main-table" style="display:none">
-    <colgroup>
-      <col style="width:36px"><col style="width:90px">
-      <col style="width:58px"><col style="width:58px">
-      <col style="width:110px"><col style="width:110px">
-      <col style="width:32px">
-    </colgroup>
-    <thead>
-      <tr>
-        <th>No.</th><th>이름</th>
-        <th class="th-kakao">카카오</th>
-        <th class="th-cream">크림</th>
-        <th class="th-kakao">카카오 조절</th>
-        <th class="th-cream">크림 조절</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
-
-  <!-- 모바일 카드 -->
-  <div class="card-list" id="card-list" style="display:none"></div>
+  <!-- 로그 카드 -->
+  <div class="log-card">
+    <div class="log-header">
+      <span class="log-title">📋 변경 로그</span>
+      <button class="log-clear" onclick="clearLog()">초기화</button>
+    </div>
+    <div id="log-list"><div class="log-empty">아직 변경 내역이 없습니다.</div></div>
+  </div>
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, onValue, push, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   const firebaseConfig = {
@@ -191,8 +246,8 @@
   const rowsRef = ref(db, 'rows');
 
   let rows = [];
-  let adding = false;
   let pendingDeleteKey = null;
+  let logs = [];
 
   function toast(msg) {
     const t = document.getElementById('toast');
@@ -207,39 +262,66 @@
     s.className = 'status ' + (cls || '');
   }
 
+  function nowStr() {
+    const d = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    return `${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+
+  function addLog(name, platform, delta, newVal) {
+    logs.unshift({ time: nowStr(), name, platform, delta, newVal });
+    if (logs.length > 100) logs.pop();
+    renderLog();
+  }
+
+  function renderLog() {
+    const el = document.getElementById('log-list');
+    if (logs.length === 0) {
+      el.innerHTML = '<div class="log-empty">아직 변경 내역이 없습니다.</div>';
+      return;
+    }
+    el.innerHTML = '';
+    const ul = document.createElement('div');
+    ul.className = 'log-list';
+    logs.forEach(l => {
+      const item = document.createElement('div');
+      item.className = 'log-item';
+      const platClass = l.platform === 'kakao' ? 'kk' : 'cr';
+      const platLabel = l.platform === 'kakao' ? '카카오' : '크림';
+      const sign = l.delta > 0 ? '+1' : '-1';
+      const actionClass = l.delta > 0 ? 'plus' : 'minus';
+      item.innerHTML = `
+        <span class="log-time">${l.time}</span>
+        <span class="log-name">${l.name}</span>
+        <span class="log-plat ${platClass}">${platLabel}</span>
+        <span class="log-action ${actionClass}">${sign}</span>
+        <span class="log-val">→ ${l.newVal}장</span>
+      `;
+      ul.appendChild(item);
+    });
+    el.appendChild(ul);
+  }
+
+  // Firebase 실시간 수신
   onValue(rowsRef, (snapshot) => {
     document.getElementById('loading').style.display = 'none';
-    document.getElementById('main-table').style.display = 'table';
-    document.getElementById('card-list').style.display = 'block';
     setStatus('🟢 연결됨', 'connected');
-
     const data = snapshot.val();
     if (data) {
       rows = Object.entries(data).map(([fbKey, v]) => ({ fbKey, ...v }));
       rows.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     } else {
       rows = [];
-      const defaults = [
-        { name:'홍길동', kakao:10, cream:8 },
-        { name:'김민준', kakao:6,  cream:4 },
-        { name:'이서연', kakao:12, cream:10 },
-        { name:'박지우', kakao:8,  cream:6 },
-        { name:'최예린', kakao:14, cream:12 },
-        { name:'정도윤', kakao:4,  cream:2 },
-      ];
-      defaults.forEach((d, i) => push(rowsRef, { ...d, order: i }));
     }
     render();
-  }, (err) => {
-    setStatus('❌ 연결 실패', 'error');
-  });
+  }, () => setStatus('❌ 연결 실패', 'error'));
 
+  // ── 렌더 ──
   function render() {
     renderTable();
     renderCards();
   }
 
-  // ── 데스크탑 테이블 ──
   function renderTable() {
     const tbody = document.getElementById('tbody');
     tbody.innerHTML = '';
@@ -251,18 +333,14 @@
         <td style="font-weight:600">${r.name}</td>
         <td><span class="count-val${kz?' zero':''}">${r.kakao}</span></td>
         <td><span class="count-val${cz?' zero':''}">${r.cream}</span></td>
-        <td>
-          <div class="ctrl">
-            <button class="btn-m bk" ${kz?'disabled':''} onclick="adj('${r.fbKey}','kakao',-1)">−</button>
-            <button class="btn-p bk" onclick="adj('${r.fbKey}','kakao',+1)">＋</button>
-          </div>
-        </td>
-        <td>
-          <div class="ctrl">
-            <button class="btn-m bc" ${cz?'disabled':''} onclick="adj('${r.fbKey}','cream',-1)">−</button>
-            <button class="btn-p bc" onclick="adj('${r.fbKey}','cream',+1)">＋</button>
-          </div>
-        </td>
+        <td><div class="ctrl">
+          <button class="btn-m bk" ${kz?'disabled':''} onclick="adj('${r.fbKey}','kakao',-1)">−</button>
+          <button class="btn-p bk" onclick="adj('${r.fbKey}','kakao',+1)">＋</button>
+        </div></td>
+        <td><div class="ctrl">
+          <button class="btn-m bc" ${cz?'disabled':''} onclick="adj('${r.fbKey}','cream',-1)">−</button>
+          <button class="btn-p bc" onclick="adj('${r.fbKey}','cream',+1)">＋</button>
+        </div></td>
         <td><button class="btn-del-row" onclick="askDelete('${r.fbKey}','${r.name}')">✕</button></td>
       `;
       tbody.appendChild(tr);
@@ -284,78 +362,64 @@
     tbody.appendChild(tot);
 
     const addTr = document.createElement('tr');
-    addTr.className = 'add-row add-row-desktop';
-    if (!adding) {
-      addTr.innerHTML = `<td colspan="7" style="text-align:left;padding:8px 10px">
-        <button class="btn-add" onclick="startAdd()">＋ 사람 추가</button>
-      </td>`;
-    } else {
-      addTr.innerHTML = `
-        <td style="font-size:11px;color:#aaa">${rows.length+1}</td>
-        <td><input class="input-name" id="nn" placeholder="이름" /></td>
-        <td><input class="input-count" id="nk" type="number" min="0" placeholder="0" /></td>
-        <td><input class="input-count" id="nc" type="number" min="0" placeholder="0" /></td>
-        <td colspan="2">
-          <div style="display:flex;gap:6px;justify-content:center">
-            <button class="btn-ok" onclick="confirmAdd()">추가</button>
-            <button class="btn-cancel" onclick="cancelAdd()">취소</button>
-          </div>
-        </td>
-        <td></td>
-      `;
-      setTimeout(()=>{ const el=document.getElementById('nn'); if(el) el.focus(); }, 30);
-    }
+    addTr.className = 'add-row';
+    addTr.innerHTML = `<td colspan="7" style="text-align:left;padding:8px 10px">
+      <button class="btn-add-tbl" onclick="openAddModal()">＋ 사람 추가</button>
+    </td>`;
     tbody.appendChild(addTr);
   }
 
-  // ── 모바일 카드 ──
   function renderCards() {
     const list = document.getElementById('card-list');
     list.innerHTML = '';
 
     const tk = rows.reduce((s,r)=>s+r.kakao,0);
     const tc = rows.reduce((s,r)=>s+r.cream,0);
-    const totalDiv = document.createElement('div');
-    totalDiv.className = 'card-total';
-    totalDiv.innerHTML = `
-      <div class="card-total-item kakao">
-        <div class="card-total-label">카카오 합계</div>
-        <div class="card-total-val">${tk}</div>
+    const bar = document.createElement('div');
+    bar.className = 'total-bar';
+    bar.innerHTML = `
+      <div class="total-chip kk">
+        <div class="total-chip-label">카카오 합계</div>
+        <div class="total-chip-val">${tk}</div>
       </div>
-      <div class="card-total-item cream">
-        <div class="card-total-label">크림 합계</div>
-        <div class="card-total-val">${tc}</div>
+      <div class="total-chip cr">
+        <div class="total-chip-label">크림 합계</div>
+        <div class="total-chip-val">${tc}</div>
       </div>
     `;
-    list.appendChild(totalDiv);
+    list.appendChild(bar);
+
+    if (rows.length === 0) {
+      const empty = document.createElement('div');
+      empty.style = 'text-align:center;color:#ccc;font-size:13px;padding:20px 0';
+      empty.textContent = '등록된 사람이 없습니다.';
+      list.appendChild(empty);
+    }
 
     rows.forEach((r, i) => {
       const kz = r.kakao <= 0, cz = r.cream <= 0;
       const card = document.createElement('div');
-      card.className = 'card';
+      card.className = 'person-card';
       card.innerHTML = `
-        <div class="card-header">
-          <div>
-            <span class="card-no">${i+1}</span>
-            <span class="card-name">${r.name}</span>
-          </div>
+        <div class="person-header">
+          <div><span class="person-no">${i+1}</span><span class="person-name">${r.name}</span></div>
           <button class="btn-del-row" onclick="askDelete('${r.fbKey}','${r.name}')">✕</button>
         </div>
-        <div class="card-body">
-          <div class="card-platform kakao">
-            <div class="card-plabel">카카오</div>
-            <div class="card-count${kz?' zero':''}">${r.kakao}</div>
-            <div class="card-ctrl">
-              <button class="card-btn-m" ${kz?'disabled':''} onclick="adj('${r.fbKey}','kakao',-1)">−</button>
-              <button class="card-btn-p" onclick="adj('${r.fbKey}','kakao',+1)">＋</button>
+        <div class="person-body">
+          <div class="plat-box kk">
+            <div class="plat-label">카카오</div>
+            <div class="plat-count${kz?' zero':''}">${r.kakao}</div>
+            <div class="plat-ctrl">
+              <button class="mb-m" ${kz?'disabled':''} onclick="adj('${r.fbKey}','kakao',-1)">−</button>
+              <button class="mb-p" onclick="adj('${r.fbKey}','kakao',+1)">＋</button>
             </div>
           </div>
-          <div class="card-platform cream">
-            <div class="card-plabel">크림</div>
-            <div class="card-count${cz?' zero':''}">${r.cream}</div>
-            <div class="card-ctrl">
-              <button class="card-btn-m" ${cz?'disabled':''} onclick="adj('${r.fbKey}','cream',-1)">−</button>
-              <button class="card-btn-p" onclick="adj('${r.fbKey}','cream',+1)">＋</button>
+          <div class="plat-box cr">
+            <div class="plat-label">크림</div>
+            <div class="plat-count${cz?' zero':''}">${r.cream}</div>
+            <div class="plat-ctrl">
+              <button class="mb-m" ${cz?'disabled':''} onclick="adj('${r.fbKey}','cream',-1)">−</button>
+              <button class="mb-p" onclick="adj('${r.fbKey}','cream',+1)">＋</button>
             </div>
           </div>
         </div>
@@ -363,29 +427,11 @@
       list.appendChild(card);
     });
 
-    if (!adding) {
-      const addBtn = document.createElement('button');
-      addBtn.className = 'btn-add-card';
-      addBtn.textContent = '＋ 사람 추가';
-      addBtn.onclick = startAdd;
-      list.appendChild(addBtn);
-    } else {
-      const form = document.createElement('div');
-      form.className = 'card-add-form';
-      form.innerHTML = `
-        <div class="inp-row">
-          <div><label>이름</label><input id="mn" placeholder="이름" /></div>
-          <div><label>카카오</label><input id="mk" type="number" min="0" placeholder="0" /></div>
-          <div><label>크림</label><input id="mc" type="number" min="0" placeholder="0" /></div>
-        </div>
-        <div class="btn-row">
-          <button class="btn-ok" onclick="confirmAdd()">추가</button>
-          <button class="btn-cancel" onclick="cancelAdd()">취소</button>
-        </div>
-      `;
-      list.appendChild(form);
-      setTimeout(()=>{ const el=document.getElementById('mn'); if(el) el.focus(); }, 30);
-    }
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn-add-card';
+    addBtn.textContent = '＋ 사람 추가';
+    addBtn.onclick = openAddModal;
+    list.appendChild(addBtn);
   }
 
   // ── 전역 함수 ──
@@ -394,47 +440,53 @@
     if (!r) return;
     if (delta < 0 && r[platform] <= 0) return;
     const newVal = Math.max(0, r[platform] + delta);
-    update(ref(db, 'rows/'+fbKey), { [platform]: newVal });
-    toast(`${r.name} · ${platform==='kakao'?'카카오':'크림'} ${delta>0?'+1':'-1'} → ${newVal}장`);
+    update(ref(db,'rows/'+fbKey), { [platform]: newVal });
+    const label = platform==='kakao'?'카카오':'크림';
+    addLog(r.name, platform, delta, newVal);
+    toast(`${r.name} · ${label} ${delta>0?'+1':'-1'} → ${newVal}장`);
   };
 
   window.askDelete = (fbKey, name) => {
     pendingDeleteKey = fbKey;
-    document.getElementById('modal-desc').textContent = `"${name}" 항목을 삭제합니다.`;
-    document.getElementById('modal').classList.add('show');
+    document.getElementById('del-modal-desc').textContent = `"${name}" 항목을 삭제합니다.`;
+    document.getElementById('del-modal').classList.add('show');
   };
-
-  window.closeModal = () => {
+  window.closeDelModal = () => {
     pendingDeleteKey = null;
-    document.getElementById('modal').classList.remove('show');
+    document.getElementById('del-modal').classList.remove('show');
   };
-
   window.confirmDelete = () => {
     if (!pendingDeleteKey) return;
-    remove(ref(db, 'rows/'+pendingDeleteKey));
-    closeModal();
+    remove(ref(db,'rows/'+pendingDeleteKey));
+    closeDelModal();
     toast('삭제되었습니다.');
   };
 
-  window.startAdd  = () => { adding = true;  render(); };
-  window.cancelAdd = () => { adding = false; render(); };
+  window.openAddModal = () => {
+    document.getElementById('add-name').value = '';
+    document.getElementById('add-kakao').value = '';
+    document.getElementById('add-cream').value = '';
+    document.getElementById('add-modal').classList.add('show');
+    setTimeout(()=>document.getElementById('add-name').focus(), 100);
+  };
+  window.closeAddModal = () => {
+    document.getElementById('add-modal').classList.remove('show');
+  };
   window.confirmAdd = () => {
-    const nameEl = document.getElementById('nn') || document.getElementById('mn');
-    const kakaoEl = document.getElementById('nk') || document.getElementById('mk');
-    const creamEl = document.getElementById('nc') || document.getElementById('mc');
-    const name = (nameEl?.value || '').trim();
-    if (!name) { nameEl?.focus(); return; }
-    const kakao = parseInt(kakaoEl?.value) || 0;
-    const cream  = parseInt(creamEl?.value) || 0;
+    const name  = (document.getElementById('add-name').value||'').trim();
+    if (!name) { document.getElementById('add-name').focus(); return; }
+    const kakao = parseInt(document.getElementById('add-kakao').value)||0;
+    const cream  = parseInt(document.getElementById('add-cream').value)||0;
     push(rowsRef, { name, kakao, cream, order: rows.length });
-    adding = false;
+    closeAddModal();
     toast(`✅ ${name} 추가 완료!`);
   };
 
+  window.clearLog = () => { logs = []; renderLog(); };
+
   document.addEventListener('keydown', e => {
-    if (e.key === 'Enter'  && adding) window.confirmAdd();
-    if (e.key === 'Escape' && adding) window.cancelAdd();
-    if (e.key === 'Escape' && pendingDeleteKey) window.closeModal();
+    if (e.key==='Escape') { closeDelModal(); closeAddModal(); }
+    if (e.key==='Enter' && document.getElementById('add-modal').classList.contains('show')) window.confirmAdd();
   });
 </script>
 </body>
